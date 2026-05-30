@@ -9,6 +9,6 @@ namespace PersonalFinance
     public struct ModelGood
     {
         public string Name;
-        public decimal Price;
+        public string Price;
     }
 }

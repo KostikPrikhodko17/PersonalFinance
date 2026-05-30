@@ -10,23 +10,37 @@ namespace PersonalFinance
     {
         static void Main(string[] argg)
         {
-            // добавить функцию: пользователь указал что у него зп N числа и N сумммы. Каждый месяц программа сама добавляет эту сумму к балансу
             // добавить ежемесячные расходы, которые будут отниматься от баланса
-            // добавить историю покупок
+            // добавить историю операций
             // добавить запоминание пользователей , баланса, покупок и т.д
+            // добавить цикл 
+            // добавить категории покупок
+            // добавить просмотр всех операций
 
 
             ModelGood modelGood = new ModelGood();
             List<ModelGood> goods = new List<ModelGood>();
 
-            Console.WriteLine("Учет финансов.");
+            bool isRunning = true;
+
+            Console.WriteLine("Учет финансов.\nЧтобы выйти введите X");
             decimal balance = BalanceUser();
-            Console.WriteLine("1. Добавить покупку\tчто то еще");
-            string input = Console.ReadLine();
-            if (input == "1")
+
+
+            Console.WriteLine("1. Добавить покупку\n2. Добавить доход\nПосмотреть историю покупок");
+            string userChoice = Console.ReadLine();
+            if(userChoice == "1")
             {
-                decimal currentBalance = Purchases(goods, balance);
-                Console.WriteLine($"Ваш баланс: {currentBalance}");
+                decimal result = Purchases(goods, balance);
+                Console.WriteLine(result + " руб.");
+            }
+            if (userChoice == "2")
+            {
+                // в разработке
+            }
+            if (userChoice == "3")
+            {
+                // в разработке
             }
 
 
@@ -44,18 +58,21 @@ namespace PersonalFinance
             return balance;
         }
 
-        static decimal Purchases(List<ModelGood> goods, decimal balance) // Функция для совершения покупок и добавления их в список покупок
+        static decimal Purchases(List<ModelGood> goods, decimal balance) // Добавление покупок
         {
-            Console.WriteLine("Что вы купили?");
-            string name = Console.ReadLine();
-            Console.WriteLine("Сколько это стоило?");
-            string input = Console.ReadLine();
-            if (!decimal.TryParse(input, out decimal price))
+            Console.Write("Что вы купили: ");
+            goods.Add(new ModelGood { Name = Console.ReadLine() });
+            Console.Write("Сколько вы потратили: ");
+            goods.Add(new ModelGood { Price = Console.ReadLine() });
+
+            if (!decimal.TryParse(goods.Last().Price, out decimal price) || price > balance)
             {
                 Console.WriteLine("Некорректный данные.");
+                Purchases(goods, balance);
+
             }
-            goods.Add(new ModelGood { Name = name, Price = price });
             return balance - price;
         }
+
     }
 }
