@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace PersonalFinance
 {
@@ -11,37 +12,48 @@ namespace PersonalFinance
         static void Main(string[] argg)
         {
             // добавить ежемесячные расходы, которые будут отниматься от баланса
-            // добавить историю операций
             // добавить запоминание пользователей , баланса, покупок и т.д
             // добавить цикл 
             // добавить категории покупок
             // добавить просмотр всех операций
 
 
-            ModelGood modelGood = new ModelGood();
             List<ModelGood> goods = new List<ModelGood>();
 
+            //Console.Write("Введите имя: ");
+            //string name = Console.ReadLine();
+
+            //User user = new User
+            //{
+            //    Name = name,
+            //    Balance = BalanceUser(),
+            //    HistoryGoods = new List<ModelGood>()
+            //};
+
+            //string json = JsonSerializer.Serialize(user);
+
+            decimal balance = BalanceUser();
             bool isRunning = true;
 
-            Console.WriteLine("Учет финансов.\nЧтобы выйти введите X");
-            decimal balance = BalanceUser();
-
-
-            Console.WriteLine("1. Добавить покупку\n2. Добавить доход\nПосмотреть историю покупок");
-            string userChoice = Console.ReadLine();
-            if(userChoice == "1")
+            do
             {
-                decimal result = Purchases(goods, balance);
-                Console.WriteLine(result + " руб.");
+                Console.WriteLine("Выберите действие.\n1. Добавить покупку\n2. Просмотреть историю покупок");
+                string input = Console.ReadLine();
+                if (input == "1")
+                {
+                    balance = Purchases(goods, balance);
+                    Console.WriteLine(balance + " руб"); 
+                }
+                if (input == "2")
+                {
+                    HistoryPurchases(goods);
+                }
+                if (input == "x")
+                {
+                    isRunning = false;
+                }
             }
-            if (userChoice == "2")
-            {
-                // в разработке
-            }
-            if (userChoice == "3")
-            {
-                // в разработке
-            }
+            while (isRunning);
 
 
         }
@@ -61,18 +73,30 @@ namespace PersonalFinance
         static decimal Purchases(List<ModelGood> goods, decimal balance) // Добавление покупок
         {
             Console.Write("Что вы купили: ");
-            goods.Add(new ModelGood { Name = Console.ReadLine() });
+            string tovar = Console.ReadLine();
             Console.Write("Сколько вы потратили: ");
-            goods.Add(new ModelGood { Price = Console.ReadLine() });
-
-            if (!decimal.TryParse(goods.Last().Price, out decimal price) || price > balance)
+            string priceTovar = Console.ReadLine();
+            if (!decimal.TryParse(priceTovar, out decimal price) || price > balance)
             {
-                Console.WriteLine("Некорректный данные.");
-                Purchases(goods, balance);
-
+                Console.WriteLine("Некоректные данные.");
+                return 0;
             }
+
+            goods.Add(new ModelGood
+            {
+                Name = tovar,
+                Price = price,
+            });
+
             return balance - price;
         }
 
+        static void HistoryPurchases(List<ModelGood> goods) // Просмотр истории покупок
+        {
+            foreach (ModelGood good in goods)
+            {
+                Console.WriteLine($"{good.Name} - {good.Price} руб.\n");
+            }
+        }
     }
 }

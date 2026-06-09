@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace PersonalFinance
 {
-    public struct ModelGood
+    public struct User
     {
         public string Name;
-        public decimal Price;
+        public decimal Balance;
+        public List<ModelGood> HistoryGoods;
     }
 }
