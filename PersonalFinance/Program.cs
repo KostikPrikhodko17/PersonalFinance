@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using System.IO;
 
 namespace PersonalFinance
 {
@@ -13,31 +14,17 @@ namespace PersonalFinance
         {
             // добавить ежемесячные расходы, которые будут отниматься от баланса
             // добавить запоминание пользователей , баланса, покупок и т.д
-            // добавить цикл 
             // добавить категории покупок
             // добавить просмотр всех операций
 
 
             List<ModelGood> goods = new List<ModelGood>();
-
-            //Console.Write("Введите имя: ");
-            //string name = Console.ReadLine();
-
-            //User user = new User
-            //{
-            //    Name = name,
-            //    Balance = BalanceUser(),
-            //    HistoryGoods = new List<ModelGood>()
-            //};
-
-            //string json = JsonSerializer.Serialize(user);
-
             decimal balance = BalanceUser();
             bool isRunning = true;
 
             do
             {
-                Console.WriteLine("Выберите действие.\n1. Добавить покупку\n2. Просмотреть историю покупок");
+                Console.WriteLine("1 - Добавить покупку\n2 -Просмотреть историю покупок\n3 - Выход");
                 string input = Console.ReadLine();
                 if (input == "1")
                 {
@@ -48,7 +35,7 @@ namespace PersonalFinance
                 {
                     HistoryPurchases(goods);
                 }
-                if (input == "x")
+                if (input == "3")
                 {
                     isRunning = false;
                 }
