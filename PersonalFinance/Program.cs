@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.IO;
+using System.Data;
 
 namespace PersonalFinance
 {
@@ -37,6 +38,16 @@ namespace PersonalFinance
                 }
                 if (input == "3")
                 {
+                    DataUser dataUser = new DataUser
+                    {
+                        Name = "test",
+                        Balance = balance,
+                        HistoryGoods = goods,
+                    };
+                    string fileName = "dataUser.json";
+                    string json = JsonSerializer.Serialize(dataUser);
+                    File.WriteAllText(fileName, json);
+
                     isRunning = false;
                 }
             }
