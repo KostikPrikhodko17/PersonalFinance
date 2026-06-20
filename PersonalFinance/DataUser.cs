@@ -6,17 +6,11 @@ using System.Threading.Tasks;
 
 namespace PersonalFinance
 {
-    public struct DataUser
+    public class DataUser
     {
-        public string Name;
-        public decimal Balance;
-        public List<ModelGood> HistoryGoods;
-
-        public DataUser(string Name, decimal Balance, List<ModelGood> HistoryGoods)
-        {
-            this.Name = Name;
-            this.Balance = Balance;
-            this.HistoryGoods = HistoryGoods;
-        }
+        public int Id;
+        public string Name { get; set; }
+        public decimal Balance { get; set; }
+        public List<ModelGood> HistoryGoods { get; set; }
     }
 }

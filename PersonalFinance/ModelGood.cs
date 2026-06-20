@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace PersonalFinance
 {
-    public struct ModelGood
+    public class ModelGood
     {
-        public string Name;
-        public decimal Price;
+        public string TovarName { get; set; }
+        public decimal Price { get; set; }
     }
 }
