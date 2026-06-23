@@ -18,12 +18,12 @@ namespace PersonalFinance
             // добавить категории покупок
             // добавить просмотр всех операций
             // добавить ? чтобы пользователь мог получить только свои данные
-            // изменить чтобыы данные инициализировались не через переменные а через поля класса
             // добавить возможность удалить пользователя
 
 
             List<ModelGood> goods = new List<ModelGood>();
             List<DataUser> dataUsers = new List<DataUser>();
+            DataUser dataUser = new DataUser();
 
             string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "dataUser.txt");
 
@@ -35,17 +35,17 @@ namespace PersonalFinance
 
 
             bool isRunning = true;
-            decimal balance = 0;
+            dataUser.Balance = 0;
 
             Console.Write("Введите имя: ");
-            string name = Console.ReadLine();
+            dataUser.Name = Console.ReadLine(); // !1 может быть null or empty
 
             // ---------------- ! изменить ? т.к это двойная проверка
-            DataUser? correctUser = dataUsers.FirstOrDefault(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            DataUser? correctUser = dataUsers.FirstOrDefault(u => u.Name.Equals(dataUser.Name, StringComparison.OrdinalIgnoreCase));
             if (correctUser != null)
             {
                 Console.WriteLine($"С возвращением, {correctUser.Name}\nБалансе: {correctUser.Balance} руб");
-                balance = correctUser.Balance;
+                dataUser.Balance = correctUser.Balance;
                 goods = correctUser.HistoryGoods;
             }
 
@@ -57,17 +57,17 @@ namespace PersonalFinance
                     switch (input)
                     {
                         case "1":
-                            balance += BalanceUser();
-                            Console.WriteLine($"\n{balance} руб");
+                            dataUser.Balance += BalanceUser();
+                            Console.WriteLine($"\n{dataUser.Balance} руб");
                             break;
 
                         case "2":
-                            if (balance == 0)
+                            if (dataUser.Balance == 0)
                             {
                                 Console.WriteLine("Ваш баланс отрицательный. Добавьте баланс.");
                             }
-                            balance = Purchases(goods, balance);
-                            Console.WriteLine($"\n{balance} руб");
+                            dataUser.Balance = Purchases(goods, dataUser.Balance);
+                            Console.WriteLine($"\n{dataUser.Balance} руб");
                             break;
 
                         case "3":
@@ -85,15 +85,15 @@ namespace PersonalFinance
                             dataUsers.Add(new DataUser
                             {
                                 Id = nextId,
-                                Name = name,
-                                Balance = balance,
+                                Name = dataUser.Name,
+                                Balance = dataUser.Balance,
                                 HistoryGoods = goods
                             });
                             SaveToDataUser(dataUsers, filePath);
                         }
                         else
                         {
-                            correctUser.Balance = balance; // - возможно не нужны
+                            correctUser.Balance = dataUser.Balance; // - возможно не нужны
                             correctUser.HistoryGoods = goods; // -
                             SaveToDataUser(dataUsers, filePath);
                         }
@@ -105,30 +105,23 @@ namespace PersonalFinance
         }
 
 
-        static decimal BalanceUser() // Инициализация баланса пользователя
+        static decimal BalanceUser() // Инициализация баланса пользователя и пополнение
         {
             Console.Write("Введите сумму: ");
             string input = Console.ReadLine();
 
             if (!decimal.TryParse(input, out decimal balance))
             {
-                Console.WriteLine("Некорректный данные.");
-                // create while() { } or рекурсия
+                Console.WriteLine("Некоректные данные");
             }
+
             return balance;
         }
 
-        static decimal Purchases(List<ModelGood> goods, decimal balance) // Добавление покупок // !!! есть ошибка: если пользователь вводит товар сумма котороого превышает баланс метод срабоет дважды но в файле появится две покупки 
+        static decimal Purchases(List<ModelGood> goods, decimal balance) // Добавление покупок 
         {
-            Console.Write("Что вы купили: ");
-            string tovar = Console.ReadLine();
-            Console.Write("Сколько вы потратили: ");
-            string priceTovar = Console.ReadLine();
-            if (!decimal.TryParse(priceTovar, out decimal price) || price > balance)
-            {
-                Console.WriteLine("Некоректные данные.");
-                Purchases(goods, balance); // изменить while { }
-            }
+            string tovar = TovarName();
+            decimal price = PriceTovar(balance);
 
             goods.Add(new ModelGood
             {
@@ -138,6 +131,44 @@ namespace PersonalFinance
 
             return balance - price;
         }
+
+        static string TovarName() // Возвращает название покупки
+        {
+            while (true)
+            {
+                Console.Write("Введите название покупки: ");
+                string tovar = Console.ReadLine();
+                
+                if (!string.IsNullOrWhiteSpace(tovar))
+                {
+                    tovar = tovar.Trim();
+                    return tovar;
+                }
+                else
+                {
+                    Console.WriteLine("Некоректные данные.");
+                }
+            }
+        } 
+
+        static decimal PriceTovar(decimal balance) // Возвращает цену товара
+        {
+            while (true)
+            {
+                Console.Write("Введите сумму покупки: ");
+                string priceTovar = Console.ReadLine();
+
+                if (decimal.TryParse(priceTovar, out decimal price) && price <= balance)
+                {
+                    return price;
+                }
+                else
+                {
+                    Console.WriteLine("Некоректные данные.");
+                }
+            }
+        }
+
 
         static List<ModelGood> HistoryPurchases(List<ModelGood> goods) // Просмотр истории покупок
         {
