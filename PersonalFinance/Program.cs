@@ -21,7 +21,6 @@ namespace PersonalFinance
             // добавить возможность удалить пользователя 
 
 
-            List<ModelGood> goods = new List<ModelGood>();
             List<DataUser> dataUsers = new List<DataUser>();
             DataUser dataUser = new DataUser();
 
@@ -40,15 +39,11 @@ namespace PersonalFinance
             if (dataUser != null)
             {
                 Console.WriteLine($"С возвращением, {dataUser.Name}\nБалансе: {dataUser.Balance} руб");
-                goods = dataUser.HistoryGoods;
                 isNewUser = false;
             }
             else
             {
-                dataUser = new DataUser();
-                dataUser.Name = name;
-                dataUser.Balance = 0;
-                dataUser.HistoryGoods = goods;
+                dataUser = new DataUser() { Name = name, Balance = 0, HistoryGoods = new List<ModelGood>() };
                 isNewUser = true;
             }
 
@@ -70,17 +65,19 @@ namespace PersonalFinance
                             if (dataUser.Balance == 0)
                             {
                                 Console.WriteLine("Ваш баланс отрицательный. Добавьте баланс.");
+                                break;
                             }
-                            dataUser.Balance = Purchases(goods, dataUser.Balance);
+                            dataUser.Balance = Purchases(dataUser);
                             Console.WriteLine($"\n{dataUser.Balance} руб");
                             break;
 
                         case "3":
-                            if (goods.Count == 0)
+                            if (dataUser.HistoryGoods.Count == 0)
                             {
                                 Console.WriteLine("Покупок еще нет.\n");
+                                break;
                             }
-                            goods = HistoryPurchases(goods);
+                            HistoryPurchases(dataUser);
                             break;
 
 
@@ -124,29 +121,34 @@ namespace PersonalFinance
 
         static decimal BalanceUser() // Инициализация баланса пользователя и пополнение
         {
-            Console.Write("Введите сумму: ");
-            string input = Console.ReadLine();
-
-            if (!decimal.TryParse(input, out decimal balance))
+            while (true)
             {
-                Console.WriteLine("Некоректные данные");
-            }
+                Console.Write("Введите сумму: ");
+                string input = Console.ReadLine();
 
-            return balance;
+                if (decimal.TryParse(input, out decimal balance))
+                {
+                    return balance;
+                }
+                else
+                {
+                    Console.WriteLine("Некоректные данные");
+                }
+            }
         }
 
-        static decimal Purchases(List<ModelGood> goods, decimal balance) // Добавление покупок 
+        static decimal Purchases(DataUser dataUser) // Добавление покупок 
         {
             string tovar = TovarName();
-            decimal price = PriceTovar(balance);
+            decimal price = PriceTovar(dataUser.Balance);
 
-            goods.Add(new ModelGood
+            dataUser.HistoryGoods.Add(new ModelGood
             {
                 TovarName = tovar,
-                Price = price,
+                Price = price
             });
 
-            return balance - price;
+            return dataUser.Balance - price;
         }
 
         static string TovarName() // Возвращает название покупки
@@ -187,17 +189,16 @@ namespace PersonalFinance
         }
 
 
-        static List<ModelGood> HistoryPurchases(List<ModelGood> goods) // Просмотр истории покупок // ----------- переработать
+        static void HistoryPurchases(DataUser dataUser) // Просмотр истории покупок 
         {
-            foreach (ModelGood good in goods)
+            foreach (var good in dataUser.HistoryGoods)
             {
-                Console.WriteLine($"{good.TovarName} - {good.Price} руб.");
+                Console.WriteLine($"{good.TovarName} - {good.Price} руб");
             }
             Console.WriteLine();
-            return goods;
         }
 
-        static void SaveToDataUser(List<DataUser> dataUsers, string filePath) // Сохрагнгие в файл
+        static void SaveToDataUser(List<DataUser> dataUsers, string filePath) // Сохранение в файл
         {
             var options = new JsonSerializerOptions
             {
