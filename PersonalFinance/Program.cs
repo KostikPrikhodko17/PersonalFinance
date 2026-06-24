@@ -18,7 +18,7 @@ namespace PersonalFinance
             // добавить категории покупок
             // добавить просмотр всех операций
             // добавить ? чтобы пользователь мог получить только свои данные
-            // добавить возможность удалить пользователя
+            // добавить возможность удалить пользователя 
 
 
             List<ModelGood> goods = new List<ModelGood>();
@@ -33,23 +33,28 @@ namespace PersonalFinance
                 dataUsers = JsonSerializer.Deserialize<List<DataUser>>(json) ?? new List<DataUser>();
             }
 
+            string name = UserName();
 
-            bool isRunning = true;
-            dataUser.Balance = 0;
-
-            Console.Write("Введите имя: ");
-            dataUser.Name = Console.ReadLine(); // !1 может быть null or empty
-
-            // ---------------- ! изменить ? т.к это двойная проверка
-            DataUser? correctUser = dataUsers.FirstOrDefault(u => u.Name.Equals(dataUser.Name, StringComparison.OrdinalIgnoreCase));
-            if (correctUser != null)
+            bool isNewUser = false;
+            dataUser = dataUsers.FirstOrDefault(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (dataUser != null)
             {
-                Console.WriteLine($"С возвращением, {correctUser.Name}\nБалансе: {correctUser.Balance} руб");
-                dataUser.Balance = correctUser.Balance;
-                goods = correctUser.HistoryGoods;
+                Console.WriteLine($"С возвращением, {dataUser.Name}\nБалансе: {dataUser.Balance} руб");
+                goods = dataUser.HistoryGoods;
+                isNewUser = false;
+            }
+            else
+            {
+                dataUser = new DataUser();
+                dataUser.Name = name;
+                dataUser.Balance = 0;
+                dataUser.HistoryGoods = goods;
+                isNewUser = true;
             }
 
-                do
+                bool isRunning = true;
+
+            do
                 {
                     Console.WriteLine("1 - Добавить баланс\n2 - Добавить покупку\n3 - Просмотреть историю покупок\n4 - Выход");
                     string input = Console.ReadLine();
@@ -78,23 +83,18 @@ namespace PersonalFinance
                             goods = HistoryPurchases(goods);
                             break;
 
+
                         case "4":
-                        if (correctUser == null) // -------------------- !
+                        if (isNewUser)
                         {
                             int nextId = dataUsers.Count == 0 ? 1 : dataUsers.Max(u => u.Id) + 1;
-                            dataUsers.Add(new DataUser
-                            {
-                                Id = nextId,
-                                Name = dataUser.Name,
-                                Balance = dataUser.Balance,
-                                HistoryGoods = goods
-                            });
+                            dataUser.Id = nextId;
+                            dataUsers.Add(dataUser);
+                           
                             SaveToDataUser(dataUsers, filePath);
                         }
                         else
                         {
-                            correctUser.Balance = dataUser.Balance; // - возможно не нужны
-                            correctUser.HistoryGoods = goods; // -
                             SaveToDataUser(dataUsers, filePath);
                         }
                             isRunning = false;
@@ -104,6 +104,23 @@ namespace PersonalFinance
                 while (isRunning);
         }
 
+        static string UserName()
+        {
+            while (true)
+            {
+                Console.Write("Введите имя: ");
+                string name = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    name = name.Trim();
+                    return name;
+                }
+                else
+                {
+                    Console.WriteLine("Некоректные данные.");
+                }
+            }
+        }
 
         static decimal BalanceUser() // Инициализация баланса пользователя и пополнение
         {
@@ -170,12 +187,13 @@ namespace PersonalFinance
         }
 
 
-        static List<ModelGood> HistoryPurchases(List<ModelGood> goods) // Просмотр истории покупок
+        static List<ModelGood> HistoryPurchases(List<ModelGood> goods) // Просмотр истории покупок // ----------- переработать
         {
             foreach (ModelGood good in goods)
             {
                 Console.WriteLine($"{good.TovarName} - {good.Price} руб.");
             }
+            Console.WriteLine();
             return goods;
         }
 
