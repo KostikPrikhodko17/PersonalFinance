@@ -14,11 +14,8 @@ namespace PersonalFinance
     {
         static void Main(string[] argg)
         {
-            // добавить ежемесячные расходы, которые будут отниматься от баланса
-            // добавить категории покупок
             // добавить просмотр всех операций
             // добавить ? чтобы пользователь мог получить только свои данные
-            // добавить возможность удалить пользователя 
 
 
             List<DataUser> dataUsers = new List<DataUser>();
@@ -33,12 +30,14 @@ namespace PersonalFinance
             }
 
             string name = UserName();
+            string settingsUser = "";
 
             bool isNewUser = false;
             dataUser = dataUsers.FirstOrDefault(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (dataUser != null)
             {
-                Console.WriteLine($"С возвращением, {dataUser.Name}\nБалансе: {dataUser.Balance} руб");
+                Console.WriteLine($"\nС возвращением, {dataUser.Name}\nБаланс: {dataUser.Balance} руб");
+                settingsUser = "5 - Удалить аккаунт";
                 isNewUser = false;
             }
             else
@@ -51,14 +50,14 @@ namespace PersonalFinance
 
             do
                 {
-                    Console.WriteLine("1 - Добавить баланс\n2 - Добавить покупку\n3 - Просмотреть историю покупок\n4 - Выход");
+                    Console.WriteLine("\n1 - Добавить баланс\n2 - Добавить покупку\n3 - Просмотреть историю покупок\n4 - Выход\n" + settingsUser);
                     string input = Console.ReadLine();
 
                     switch (input)
                     {
                         case "1":
                             dataUser.Balance += BalanceUser();
-                            Console.WriteLine($"\n{dataUser.Balance} руб");
+                            Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
                             break;
 
                         case "2":
@@ -68,7 +67,7 @@ namespace PersonalFinance
                                 break;
                             }
                             dataUser.Balance = Purchases(dataUser);
-                            Console.WriteLine($"\n{dataUser.Balance} руб");
+                            Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
                             break;
 
                         case "3":
@@ -96,6 +95,21 @@ namespace PersonalFinance
                         }
                             isRunning = false;
                             break;
+
+                        case "5":
+                        bool isDelete = DeleteAcount();
+                        if (isDelete)
+                        {
+                            Console.WriteLine("До новых встреч !");
+                            dataUsers.Remove(dataUser);
+                            SaveToDataUser(dataUsers, filePath);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Спасибо что остаетесь с нами !");
+                        }
+                        isRunning = false;
+                        break;
                     }
                 }
                 while (isRunning);
@@ -116,6 +130,22 @@ namespace PersonalFinance
                 {
                     Console.WriteLine("Некоректные данные.");
                 }
+            }
+        }
+
+        static bool DeleteAcount()
+        {
+           while (true) 
+           {
+                Console.WriteLine("\nДействие не обратимо. Вы уверены?\n1 - Да\n2 - Отменить выбор");
+                string deleteAcount = Console.ReadLine();
+
+                if (deleteAcount == "1")
+                    return true;
+                else if (deleteAcount == "2")
+                    return false;
+                else
+                    Console.WriteLine("Некоректные данные");
             }
         }
 
@@ -187,7 +217,6 @@ namespace PersonalFinance
                 }
             }
         }
-
 
         static void HistoryPurchases(DataUser dataUser) // Просмотр истории покупок 
         {
