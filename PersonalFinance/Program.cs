@@ -43,7 +43,7 @@ namespace PersonalFinance
             }
             else
             {
-                dataUser = new DataUser() { Name = name, Balance = 0, HistoryGoods = new List<ModelGood>(), Incomes = new List<Income>() };
+                dataUser = new DataUser() { Name = name, Balance = 0, HistoryTovars = new List<ModelTovar>(), Incomes = new List<Income>() };
                 isNewUser = true;
             }
 
@@ -72,7 +72,7 @@ namespace PersonalFinance
                         break;
                     
                     case "3":
-                        if (dataUser.HistoryGoods.Count == 0 && dataUser.Incomes.Count == 0)
+                        if (dataUser.HistoryTovars.Count == 0 && dataUser.Incomes.Count == 0)
                         {
                             Console.WriteLine("Операций еще нет.\n");
                             break;
@@ -110,6 +110,9 @@ namespace PersonalFinance
                             Console.WriteLine("Спасибо что остаетесь с нами !");
                         }
                         isRunning = false;
+                        break;
+                    default:
+                        Console.WriteLine("Некоректные данные.");
                         break;
                     }
                 }
@@ -152,6 +155,11 @@ namespace PersonalFinance
 
         static decimal BalanceUser(DataUser dataUser) // Инициализация баланса пользователя и пополнение
         {
+            Console.WriteLine("\n1 - Вернуться в меню\n2 - Продолжить");
+            string comeBack = Console.ReadLine();
+            if (comeBack == "1")
+                return 0;
+
             while (true)
             {
                 Console.Write("Введите сумму: ");
@@ -175,10 +183,15 @@ namespace PersonalFinance
 
         static decimal Purchases(DataUser dataUser) // Добавление покупок 
         {
+            Console.WriteLine("\n1 - Вернуться в меню\n2 - Продолжить");
+            string comeBack = Console.ReadLine();
+            if (comeBack == "1")
+                return dataUser.Balance;
+
             string tovar = TovarName();
             decimal price = PriceTovar(dataUser.Balance);
 
-            dataUser.HistoryGoods.Add(new ModelGood
+            dataUser.HistoryTovars.Add(new ModelTovar
             {
                 TovarName = tovar,
                 Price = price
@@ -227,7 +240,7 @@ namespace PersonalFinance
         static void HistoryOperations(DataUser dataUser) // Просмотр истории покупок 
         {
             Console.WriteLine("\nПокупки: ");
-            foreach (var good in dataUser.HistoryGoods)
+            foreach (var good in dataUser.HistoryTovars)
             {
                 Console.WriteLine($"{good.TovarName} - {good.Price} руб");
             }
@@ -248,7 +261,14 @@ namespace PersonalFinance
             };
 
             string json = JsonSerializer.Serialize(dataUsers, options);
-            File.WriteAllText(filePath, json );
+            try
+            {
+                File.WriteAllText(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PersonalFinance
 {
-    public class ModelGood
+    public class ModelTovar
     {
         public string TovarName { get; set; }
         public decimal Price { get; set; }
