@@ -14,8 +14,9 @@ namespace PersonalFinance
     {
         static void Main(string[] argg)
         {
-            // добавить просмотр всех операций
             // добавить ? чтобы пользователь мог получить только свои данные
+            // Сделать чтобы баланс расчитывался из пополнений и покупок
+            // сделать один класс Operations и в нем регулировать доходы и расходы.
 
 
             List<DataUser> dataUsers = new List<DataUser>();
@@ -42,45 +43,44 @@ namespace PersonalFinance
             }
             else
             {
-                dataUser = new DataUser() { Name = name, Balance = 0, HistoryGoods = new List<ModelGood>() };
+                dataUser = new DataUser() { Name = name, Balance = 0, HistoryGoods = new List<ModelGood>(), Incomes = new List<Income>() };
                 isNewUser = true;
             }
 
                 bool isRunning = true;
-
+            
             do
+            {
+                Console.WriteLine("\n1 - Добавить баланс\n2 - Добавить покупку\n3 - Просмотреть историю операций\n4 - Выход\n" + settingsUser);
+                string input = Console.ReadLine();
+                
+                switch (input)
                 {
-                    Console.WriteLine("\n1 - Добавить баланс\n2 - Добавить покупку\n3 - Просмотреть историю покупок\n4 - Выход\n" + settingsUser);
-                    string input = Console.ReadLine();
-
-                    switch (input)
-                    {
-                        case "1":
-                            dataUser.Balance += BalanceUser();
-                            Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
+                    case "1":
+                        dataUser.Balance += BalanceUser(dataUser);
+                        Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
+                        break;
+                    
+                    case "2":
+                        if (dataUser.Balance == 0)
+                        {
+                            Console.WriteLine("Ваш баланс отрицательный. Добавьте баланс.");
                             break;
-
-                        case "2":
-                            if (dataUser.Balance == 0)
-                            {
-                                Console.WriteLine("Ваш баланс отрицательный. Добавьте баланс.");
-                                break;
-                            }
-                            dataUser.Balance = Purchases(dataUser);
-                            Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
+                        }
+                        dataUser.Balance = Purchases(dataUser);
+                        Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
+                        break;
+                    
+                    case "3":
+                        if (dataUser.HistoryGoods.Count == 0 && dataUser.Incomes.Count == 0)
+                        {
+                            Console.WriteLine("Операций еще нет.\n");
                             break;
-
-                        case "3":
-                            if (dataUser.HistoryGoods.Count == 0)
-                            {
-                                Console.WriteLine("Покупок еще нет.\n");
-                                break;
-                            }
-                            HistoryPurchases(dataUser);
-                            break;
-
-
-                        case "4":
+                        }
+                        HistoryOperations(dataUser);
+                        break;
+                    
+                    case "4":
                         if (isNewUser)
                         {
                             int nextId = dataUsers.Count == 0 ? 1 : dataUsers.Max(u => u.Id) + 1;
@@ -93,15 +93,16 @@ namespace PersonalFinance
                         {
                             SaveToDataUser(dataUsers, filePath);
                         }
-                            isRunning = false;
-                            break;
-
-                        case "5":
+                        isRunning = false;
+                        break;
+                    
+                    case "5":
                         bool isDelete = DeleteAcount();
                         if (isDelete)
                         {
                             Console.WriteLine("До новых встреч !");
                             dataUsers.Remove(dataUser);
+
                             SaveToDataUser(dataUsers, filePath);
                         }
                         else
@@ -149,7 +150,7 @@ namespace PersonalFinance
             }
         }
 
-        static decimal BalanceUser() // Инициализация баланса пользователя и пополнение
+        static decimal BalanceUser(DataUser dataUser) // Инициализация баланса пользователя и пополнение
         {
             while (true)
             {
@@ -158,6 +159,11 @@ namespace PersonalFinance
 
                 if (decimal.TryParse(input, out decimal balance))
                 {
+                    dataUser.Incomes.Add(new Income
+                    {
+                        Amount = balance,
+                        IncomeDate = DateTime.Now
+                    });
                     return balance;
                 }
                 else
@@ -218,13 +224,19 @@ namespace PersonalFinance
             }
         }
 
-        static void HistoryPurchases(DataUser dataUser) // Просмотр истории покупок 
+        static void HistoryOperations(DataUser dataUser) // Просмотр истории покупок 
         {
+            Console.WriteLine("\nПокупки: ");
             foreach (var good in dataUser.HistoryGoods)
             {
                 Console.WriteLine($"{good.TovarName} - {good.Price} руб");
             }
-            Console.WriteLine();
+            Console.WriteLine("\nДоход: ");
+
+            foreach (var income in dataUser.Incomes)
+            {
+                Console.WriteLine($"+{income.Amount} - {income.IncomeDate.ToString("dd.MM.yyyy")}");
+            }
         }
 
         static void SaveToDataUser(List<DataUser> dataUsers, string filePath) // Сохранение в файл

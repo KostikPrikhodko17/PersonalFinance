@@ -12,5 +12,6 @@ namespace PersonalFinance
         public string Name { get; set; }
         public decimal Balance { get; set; }
         public List<ModelGood> HistoryGoods { get; set; }
+        public List<Income> Incomes { get; set; } 
     }
 }
