@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using System.IO;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PersonalFinance
 {
@@ -155,14 +156,9 @@ namespace PersonalFinance
 
         static decimal BalanceUser(DataUser dataUser) // Инициализация баланса пользователя и пополнение
         {
-            Console.WriteLine("\n1 - Вернуться в меню\n2 - Продолжить");
-            string comeBack = Console.ReadLine();
-            if (comeBack == "1")
-                return 0;
-
             while (true)
             {
-                Console.Write("Введите сумму: ");
+                Console.Write("\nx - Вернуться в меню\nВведите сумму: ");
                 string input = Console.ReadLine();
 
                 if (decimal.TryParse(input, out decimal balance))
@@ -174,6 +170,10 @@ namespace PersonalFinance
                     });
                     return balance;
                 }
+                else if (input.ToLower() == "x")
+                {
+                    return 0;
+                }
                 else
                 {
                     Console.WriteLine("Некоректные данные");
@@ -183,13 +183,13 @@ namespace PersonalFinance
 
         static decimal Purchases(DataUser dataUser) // Добавление покупок 
         {
-            Console.WriteLine("\n1 - Вернуться в меню\n2 - Продолжить");
-            string comeBack = Console.ReadLine();
-            if (comeBack == "1")
+            string tovar = TovarName();
+            if (tovar == "")
                 return dataUser.Balance;
 
-            string tovar = TovarName();
             decimal price = PriceTovar(dataUser.Balance);
+            if (price == 0)
+                return dataUser.Balance;
 
             dataUser.HistoryTovars.Add(new ModelTovar
             {
@@ -204,13 +204,17 @@ namespace PersonalFinance
         {
             while (true)
             {
-                Console.Write("Введите название покупки: ");
+                Console.Write("\nx - Вернуться в меню\nВведите название покупки: ");
                 string tovar = Console.ReadLine();
                 
-                if (!string.IsNullOrWhiteSpace(tovar))
+                if (tovar.ToLower() != "x" && !string.IsNullOrWhiteSpace(tovar))
                 {
                     tovar = tovar.Trim();
                     return tovar;
+                }
+                else if (tovar.ToLower() == "x")
+                {
+                    return "";
                 }
                 else
                 {
@@ -223,12 +227,16 @@ namespace PersonalFinance
         {
             while (true)
             {
-                Console.Write("Введите сумму покупки: ");
+                Console.Write("\nx - Вернуться в меню\nВведите сумму покупки: ");
                 string priceTovar = Console.ReadLine();
 
-                if (decimal.TryParse(priceTovar, out decimal price) && price <= balance)
+                if (decimal.TryParse(priceTovar, out decimal price) && price <= balance && price != 0)
                 {
                     return price;
+                }
+                else if (priceTovar.ToLower() == "x")
+                {
+                    return 0;
                 }
                 else
                 {
