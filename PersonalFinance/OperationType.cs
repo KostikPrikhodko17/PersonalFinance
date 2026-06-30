@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace PersonalFinance
 {
-    public class Income
+    public enum OperationType
     {
-        public decimal Amount { get; set; }
-        public DateTime IncomeDate { get; set; }
+        Доход,
+        Расход
     }
 }

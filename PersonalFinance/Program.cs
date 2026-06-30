@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Text.Json;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Unicode;
-using System.IO;
-using System.Reflection.Metadata.Ecma335;
 
 namespace PersonalFinance
 {
@@ -16,8 +14,6 @@ namespace PersonalFinance
         static void Main(string[] argg)
         {
             // добавить ? чтобы пользователь мог получить только свои данные
-            // Сделать чтобы баланс расчитывался из пополнений и покупок
-            // сделать один класс Operations и в нем регулировать доходы и расходы.
 
 
             List<DataUser> dataUsers = new List<DataUser>();
@@ -33,8 +29,8 @@ namespace PersonalFinance
 
             string name = UserName();
             string settingsUser = "";
-
             bool isNewUser = false;
+
             dataUser = dataUsers.FirstOrDefault(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (dataUser != null)
             {
@@ -44,24 +40,24 @@ namespace PersonalFinance
             }
             else
             {
-                dataUser = new DataUser() { Name = name, Balance = 0, HistoryTovars = new List<ModelTovar>(), Incomes = new List<Income>() };
+                dataUser = new DataUser { Name = name, Balance = 0, Operations = new List<Operation>() };
                 isNewUser = true;
             }
 
-                bool isRunning = true;
-            
+            bool isRunning = true;
+
             do
             {
                 Console.WriteLine("\n1 - Добавить баланс\n2 - Добавить покупку\n3 - Просмотреть историю операций\n4 - Выход\n" + settingsUser);
                 string input = Console.ReadLine();
-                
+
                 switch (input)
                 {
                     case "1":
                         dataUser.Balance += BalanceUser(dataUser);
                         Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
                         break;
-                    
+
                     case "2":
                         if (dataUser.Balance == 0)
                         {
@@ -71,23 +67,23 @@ namespace PersonalFinance
                         dataUser.Balance = Purchases(dataUser);
                         Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
                         break;
-                    
+
                     case "3":
-                        if (dataUser.HistoryTovars.Count == 0 && dataUser.Incomes.Count == 0)
+                        if (dataUser.Operations.Count == 0)
                         {
                             Console.WriteLine("Операций еще нет.\n");
                             break;
                         }
                         HistoryOperations(dataUser);
                         break;
-                    
+
                     case "4":
                         if (isNewUser)
                         {
                             int nextId = dataUsers.Count == 0 ? 1 : dataUsers.Max(u => u.Id) + 1;
                             dataUser.Id = nextId;
                             dataUsers.Add(dataUser);
-                           
+
                             SaveToDataUser(dataUsers, filePath);
                         }
                         else
@@ -96,7 +92,7 @@ namespace PersonalFinance
                         }
                         isRunning = false;
                         break;
-                    
+
                     case "5":
                         bool isDelete = DeleteAcount();
                         if (isDelete)
@@ -112,12 +108,13 @@ namespace PersonalFinance
                         }
                         isRunning = false;
                         break;
+
                     default:
                         Console.WriteLine("Некоректные данные.");
                         break;
-                    }
                 }
-                while (isRunning);
+            }
+            while (isRunning);
         }
 
         static string UserName()
@@ -140,8 +137,8 @@ namespace PersonalFinance
 
         static bool DeleteAcount()
         {
-           while (true) 
-           {
+            while (true)
+            {
                 Console.WriteLine("\nДействие не обратимо. Вы уверены?\n1 - Да\n2 - Отменить выбор");
                 string deleteAcount = Console.ReadLine();
 
@@ -156,19 +153,35 @@ namespace PersonalFinance
 
         static decimal BalanceUser(DataUser dataUser) // Инициализация баланса пользователя и пополнение
         {
-            while (true)
-            {
-                Console.Write("\nx - Вернуться в меню\nВведите сумму: ");
-                string input = Console.ReadLine();
+            string nameOfIncome = NameIncomeOrExpence();
+            if (nameOfIncome == "")
+                return dataUser.Balance;
 
-                if (decimal.TryParse(input, out decimal balance))
+            decimal income = TheSumOfIncome();
+            if (income == 0)
+                return dataUser.Balance;
+
+            dataUser.Operations.Add(new Operation
+            {
+                Name = nameOfIncome,
+                Amount = income,
+                DateTime = DateTime.Now,
+                OperationType = OperationType.Доход
+            });
+
+            return income;
+        }
+
+        static decimal TheSumOfIncome()
+        {
+            while(true)
+            {
+                Console.Write("\nx - Вернуться в меню\nВведите сумму пополнения: ");
+                string input = Console.ReadLine();
+                
+                if (decimal.TryParse(input, out decimal sumIncome))
                 {
-                    dataUser.Incomes.Add(new Income
-                    {
-                        Amount = balance,
-                        IncomeDate = DateTime.Now
-                    });
-                    return balance;
+                    return sumIncome;
                 }
                 else if (input.ToLower() == "x")
                 {
@@ -176,14 +189,14 @@ namespace PersonalFinance
                 }
                 else
                 {
-                    Console.WriteLine("Некоректные данные");
+                    Console.WriteLine("Некоректные данные.");
                 }
             }
         }
 
         static decimal Purchases(DataUser dataUser) // Добавление покупок 
         {
-            string tovar = TovarName();
+            string tovar = NameIncomeOrExpence();
             if (tovar == "")
                 return dataUser.Balance;
 
@@ -191,28 +204,30 @@ namespace PersonalFinance
             if (price == 0)
                 return dataUser.Balance;
 
-            dataUser.HistoryTovars.Add(new ModelTovar
+            dataUser.Operations.Add(new Operation
             {
-                TovarName = tovar,
-                Price = price
+                Name = tovar,
+                Amount = price,
+                DateTime = DateTime.Now,
+                OperationType = OperationType.Расход
             });
 
             return dataUser.Balance - price;
         }
 
-        static string TovarName() // Возвращает название покупки
+        static string NameIncomeOrExpence() // Возвращает название операции (источник дохода-навание товара)
         {
             while (true)
             {
-                Console.Write("\nx - Вернуться в меню\nВведите название покупки: ");
-                string tovar = Console.ReadLine();
-                
-                if (tovar.ToLower() != "x" && !string.IsNullOrWhiteSpace(tovar))
+                Console.Write("\nx - Вернуться в меню\nВведите название операции: ");
+                string name = Console.ReadLine();
+
+                if (name.ToLower() != "x" && !string.IsNullOrWhiteSpace(name))
                 {
-                    tovar = tovar.Trim();
-                    return tovar;
+                    name = name.Trim();
+                    return name;
                 }
-                else if (tovar.ToLower() == "x")
+                else if (name.ToLower() == "x")
                 {
                     return "";
                 }
@@ -221,7 +236,7 @@ namespace PersonalFinance
                     Console.WriteLine("Некоректные данные.");
                 }
             }
-        } 
+        }
 
         static decimal PriceTovar(decimal balance) // Возвращает цену товара
         {
@@ -247,16 +262,11 @@ namespace PersonalFinance
 
         static void HistoryOperations(DataUser dataUser) // Просмотр истории покупок 
         {
-            Console.WriteLine("\nПокупки: ");
-            foreach (var good in dataUser.HistoryTovars)
+            Console.WriteLine();
+            foreach (var operation in dataUser.Operations)
             {
-                Console.WriteLine($"{good.TovarName} - {good.Price} руб");
-            }
-            Console.WriteLine("\nДоход: ");
-
-            foreach (var income in dataUser.Incomes)
-            {
-                Console.WriteLine($"+{income.Amount} - {income.IncomeDate.ToString("dd.MM.yyyy")}");
+                string sign = operation.OperationType == OperationType.Доход ? "+" : "-";
+                Console.WriteLine($"{operation.DateTime.ToString("dd.MM.yyyy")} {operation.OperationType} {sign}{operation.Amount} {operation.Name}");
             }
         }
 
