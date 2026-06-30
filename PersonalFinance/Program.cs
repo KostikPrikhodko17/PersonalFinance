@@ -54,7 +54,7 @@ namespace PersonalFinance
                 switch (input)
                 {
                     case "1":
-                        dataUser.Balance += BalanceUser(dataUser);
+                        dataUser.Balance = BalanceUser(dataUser);
                         Console.WriteLine($"\nБаланс: {dataUser.Balance} руб");
                         break;
 
@@ -169,7 +169,7 @@ namespace PersonalFinance
                 OperationType = OperationType.Доход
             });
 
-            return income;
+            return dataUser.Balance + income;
         }
 
         static decimal TheSumOfIncome()
